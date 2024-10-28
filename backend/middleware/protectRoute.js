@@ -1,32 +1,49 @@
+// protectRoute.js
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { ENV_VARS } from "../config/envVars.js";
 
 export const protectRoute = async (req, res, next) => {
-	try {
-		const token = req.headers["authorization"];
-		
-		if (!token) {
-			return res.status(401).json({ success: false, message: "Unauthorized - No Token Provided" });
-		}
+  try {
+    const token = req.headers["authorization"];
 
-		const decoded = jwt.verify(token.split(" ")[1], ENV_VARS.JWT_SECRET);
+    if (!token) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized - No Token Provided" });
+    }
 
-		if (!decoded) {
-			return res.status(401).json({ success: false, message: "Unauthorized - Invalid Token" });
-		}
+    const splitToken = token.split(" ");
+    if (splitToken.length !== 2 || splitToken[0] !== "Bearer") {
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: "Unauthorized - Invalid Token Format",
+        });
+    }
 
-		const user = await User.findById(decoded.userId).select("-password");
+    const decoded = jwt.verify(splitToken[1], ENV_VARS.JWT_SECRET);
 
-		if (!user) {
-			return res.status(404).json({ success: false, message: "User not found" });
-		}
+    if (!decoded) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized - Invalid Token" });
+    }
 
-		req.user = user;
+    const user = await User.findById(decoded.userId).select("-password");
 
-		next();
-	} catch (error) {
-		console.log("Error in protectRoute middleware: ", error.message);
-		res.status(500).json({ success: false, message: "Internal Server Error" });
-	}
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    req.user = user;
+
+    next();
+  } catch (error) {
+    console.error("Error in protectRoute middleware:", error); // Log the full error
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
 };

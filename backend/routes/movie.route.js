@@ -1,17 +1,20 @@
+// routes/movie.route.js
 import express from "express";
 import {
-	getMovieDetails,
-	getMoviesByCategory,
-	getMovieTrailer,
-	getSimilarMovies,
-	getTrendingMovie,
-	getNowPlayingMovies,
-	getRecommendationMovies
+  getTrendingMovie,
+  getNowPlayingMovies,
+  getMovieDetails,
+  getMovieTrailer,
+  getSimilarMovies,
+  getRecommendationMovies,
+  getMoviesByCategory,
 } from "../controllers/movie.controller.js";
+import { protectRoute } from "../middleware/protectRoute.js";
 
 const router = express.Router();
 
-router.get("/trending", getTrendingMovie);
+// Define the routes
+router.get("/trending", protectRoute, getTrendingMovie); // Ensure this route is defined
 router.get("/nowplaying", getNowPlayingMovies);
 router.get("/:id/trailer", getMovieTrailer);
 router.get("/:id/details", getMovieDetails);
